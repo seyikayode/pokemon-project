@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    container_name: pokemanager-app
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "80:3001"
+    volumes:
+      - db_data:/usr/src/app/db
+    depends_on:
+      - redis
+
+  redis:
+    image: redis:7-alpine
+    container_name: pokemanager-redis
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+
+volumes:
+  db_data:
+  redis_data:

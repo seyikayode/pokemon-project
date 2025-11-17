@@ -1,0 +1,218 @@
+.modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    padding: 1rem;
+}
+
+.modal-content {
+    position: relative;
+    background: var(--bg-white);
+    border-radius: 8px;
+    padding: 2.5rem 2rem;
+    width: 100%;
+    max-width: 450px;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.close-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: #eee;
+    border: none;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    line-height: 1;
+}
+
+.modal-content img {
+    width: 150px;
+    height: 150px;
+    margin-bottom: 1rem;
+}
+
+.modal-content h2 {
+    text-transform: capitalize;
+    font-size: 2rem;
+    margin: 0 0 1.5rem 0;
+    color: var(--primary-color);
+}
+
+.details-section {
+    margin-bottom: 1.5rem;
+    text-align: left;
+}
+
+.details-section h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 0.5rem;
+    margin: 0 0 0.75rem 0;
+}
+
+.tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.type {
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    color: #fff;
+    font-weight: 500;
+    text-transform: capitalize;
+    font-size: 0.9rem;
+}
+
+.abilities-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.abilities-list li {
+    padding: 0.25rem 0;
+    text-transform: capitalize;
+    font-size: 1rem;
+}
+
+.evolution-chain {
+    display: flex;
+    flex-wrap: wrap;
+    /* Allows wrapping on small screens */
+    justify-content: center;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.evolution-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.evolution-step img {
+    width: 75px;
+    height: 75px;
+    /* A light background helps sprites stand out */
+    background-color: #f2f2f2;
+    border-radius: 50%;
+    image-rendering: pixelated;
+    /* Keep pixel art sharp */
+}
+
+.evolution-step span {
+    font-size: 0.9rem;
+    font-weight: 500;
+    text-transform: capitalize;
+}
+
+.evolution-arrow {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--text-light);
+}
+
+.type.normal {
+    background-color: #a8a878;
+}
+
+.type.fire {
+    background-color: #f08030;
+}
+
+.type.water {
+    background-color: #6890f0;
+}
+
+.type.grass {
+    background-color: #78c850;
+}
+
+.type.electric {
+    background-color: #f8d030;
+}
+
+.type.ice {
+    background-color: #98d8d8;
+}
+
+.type.fighting {
+    background-color: #c03028;
+}
+
+.type.poison {
+    background-color: #a040a0;
+}
+
+.type.ground {
+    background-color: #e0c068;
+}
+
+.type.flying {
+    background-color: #a890f0;
+}
+
+.type.psychic {
+    background-color: #f85888;
+}
+
+.type.bug {
+    background-color: #a8b820;
+}
+
+.type.rock {
+    background-color: #b8a038;
+}
+
+.type.ghost {
+    background-color: #705898;
+}
+
+.type.dragon {
+    background-color: #7038f8;
+}
+
+.type.dark {
+    background-color: #705848;
+}
+
+.type.steel {
+    background-color: #b8b8d0;
+}
+
+.type.fairy {
+    background-color: #ee99ac;
+}
