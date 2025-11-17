@@ -3,6 +3,18 @@
 /node_modules
 /build
 
+frontend/node_modules/
+backend/node_modules/
+
+frontend/.env
+backend/.env
+
+frontend/build
+backend/build
+
+frontend/dist
+backend/dist
+
 # Logs
 logs
 *.log
