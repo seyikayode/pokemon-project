@@ -4,8 +4,8 @@ import { useFavorites } from '../context/FavoritesContext';
 import './PokemonCard.css';
 
 interface Props {
-    pokemon: SimplePokemon;
-    onCardClick: () => void;
+    pokemon: SimplePokemon
+    onCardClick: () => void
 };
 
 const PokemonCard: React.FC<Props> = ({ pokemon, onCardClick }) => {
@@ -13,12 +13,12 @@ const PokemonCard: React.FC<Props> = ({ pokemon, onCardClick }) => {
     const isFav = isFavorite(pokemon.name);
 
     const handleFavoriteClick = (e: React.MouseEvent) => {
-        e.stopPropagation();
+        e.stopPropagation()
         if (isFav) {
-            removeFavorite(pokemon.name);
+            removeFavorite(pokemon.name)
         } else {
-            addFavorite(pokemon.name);
-        };
+            addFavorite(pokemon.name)
+        }
     };
 
     return (
@@ -33,7 +33,7 @@ const PokemonCard: React.FC<Props> = ({ pokemon, onCardClick }) => {
             <h3>{pokemon.name}</h3>
             <span className="pokemon-id">#{pokemon.id.toString().padStart(3, '0')}</span>
         </div>
-    );
+    )
 };
 
 export default PokemonCard;

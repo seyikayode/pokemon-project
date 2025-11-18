@@ -22,6 +22,10 @@
     text-align: center;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
     animation: fadeIn 0.3s ease-out;
+
+    min-height: 600px;
+    display: flex;
+    flex-direction: column;
 }
 
 @keyframes fadeIn {
@@ -52,6 +56,7 @@
     justify-content: center;
     align-items: center;
     line-height: 1;
+    z-index: 2;
 }
 
 .modal-content img {
@@ -110,7 +115,6 @@
 .evolution-chain {
     display: flex;
     flex-wrap: wrap;
-    /* Allows wrapping on small screens */
     justify-content: center;
     align-items: center;
     gap: 0.75rem;
@@ -126,11 +130,10 @@
 .evolution-step img {
     width: 75px;
     height: 75px;
-    /* A light background helps sprites stand out */
     background-color: #f2f2f2;
     border-radius: 50%;
     image-rendering: pixelated;
-    /* Keep pixel art sharp */
+    margin-bottom: 0;
 }
 
 .evolution-step span {
@@ -145,6 +148,7 @@
     color: var(--text-light);
 }
 
+/* --- Type Colors --- */
 .type.normal {
     background-color: #a8a878;
 }
@@ -215,4 +219,111 @@
 
 .type.fairy {
     background-color: #ee99ac;
+}
+
+/* --- Modal Skeleton Styles --- */
+
+.modal-skeleton-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+}
+
+/* Shared Shimmer Logic */
+.skeleton-title,
+.skeleton-image-large,
+.skeleton-subtitle,
+.skeleton-tag,
+.skeleton-text-line,
+.skeleton-evo-circle {
+    background: #f0f0f0;
+    background-image: linear-gradient(to right,
+            #f0f0f0 0%,
+            #e0e0e0 20%,
+            #f0f0f0 40%,
+            #f0f0f0 100%);
+    background-repeat: no-repeat;
+    background-size: 200% 100%;
+    animation: modalShimmer 1.5s infinite linear;
+    border-radius: 4px;
+}
+
+@keyframes modalShimmer {
+    0% {
+        background-position: -200% 0;
+    }
+
+    100% {
+        background-position: 200% 0;
+    }
+}
+
+.skeleton-header {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+}
+
+.skeleton-title {
+    width: 60%;
+    height: 40px;
+    /* Match h2 size */
+}
+
+.skeleton-image-large {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    /* Match main image */
+    margin-bottom: 1.5rem;
+}
+
+.skeleton-section {
+    width: 100%;
+    margin-bottom: 2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.skeleton-subtitle {
+    width: 30%;
+    height: 24px;
+    margin-bottom: 1rem;
+}
+
+.skeleton-tags-row {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.skeleton-tag {
+    width: 60px;
+    height: 24px;
+    border-radius: 12px;
+}
+
+.skeleton-text-line {
+    width: 80%;
+    height: 16px;
+    margin-bottom: 0.5rem;
+}
+
+.skeleton-text-line.short {
+    width: 50%;
+}
+
+.skeleton-evo-row {
+    display: flex;
+    gap: 1rem;
+    width: 100%;
+    justify-content: center;
+}
+
+.skeleton-evo-circle {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
 }

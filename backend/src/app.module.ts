@@ -1,13 +1,14 @@
 import { Module } from '@nestjs/common';
+import { APP_GUARD } from '@nestjs/core'
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { CacheModule } from '@nestjs/cache-manager';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { redisStore } from 'cache-manager-redis-store';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PokemonModule } from './pokemon/pokemon.module';
-import { Favorite } from './pokemon/favorite.entity';
-import { PokemonService } from './pokemon/pokemon.service';
+import { Favorite } from './pokemon/entity/favorite.entity';
 
 @Module({
   imports: [
@@ -15,6 +16,11 @@ import { PokemonService } from './pokemon/pokemon.service';
       isGlobal: true,
       envFilePath: '.env'
     }),
+
+    ThrottlerModule.forRoot([{
+      ttl: 60000,
+      limit: 100
+    }]),
 
     CacheModule.registerAsync({
       isGlobal: true,
@@ -44,6 +50,12 @@ import { PokemonService } from './pokemon/pokemon.service';
     PokemonModule
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard
+    },
+    AppService
+  ],
 })
-export class AppModule {}
+export class AppModule { }

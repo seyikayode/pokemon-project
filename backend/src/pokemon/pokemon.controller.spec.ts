@@ -1,65 +1,110 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { PokemonController } from './pokemon.controller';
 import { PokemonService } from './pokemon.service';
-
-const mockPokemonService = {
-  getPokemonListWithDetails: jest.fn(() => Promise.resolve([{ name: 'pikachu' }])),
-  getPokemonFullDetails: jest.fn((name) =>
-    Promise.resolve({ id: 25, name, abilities: [], types: [], image: '', evolution: [] }),
-  ),
-  getFavorites: jest.fn(() => Promise.resolve(['pikachu'])),
-  addFavorite: jest.fn((name) => Promise.resolve(['pikachu', name])),
-  removeFavorite: jest.fn((name) => Promise.resolve(['pikachu'])),
-};
+import { CreateFavoriteDto } from './dto/create-favorite.dto';
 
 describe('PokemonController', () => {
-  let controller: PokemonController;
+  let controller: PokemonController
+  let service: PokemonService
+
+  // Mock Data
+  const mockPokemonList = [
+    { name: 'pikachu', id: 25, image: 'img.png' },
+    { name: 'bulbasaur', id: 1, image: 'img.png' }
+  ];
+
+  const mockPokemonDetails = {
+    id: 25,
+    name: 'pikachu',
+    abilities: ['static'],
+    types: ['electric'],
+    image: 'img.png',
+    evolution: []
+  };
 
   beforeEach(async () => {
+    const mockPokemonService = {
+      getPokemonListWithDetails: jest.fn(),
+      getPokemonFullDetails: jest.fn(),
+      getFavorites: jest.fn(),
+      addFavorite: jest.fn(),
+      removeFavorite: jest.fn()
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       controllers: [PokemonController],
       providers: [
         {
           provide: PokemonService,
-          useValue: mockPokemonService,
+          useValue: mockPokemonService
         },
       ],
     }).compile();
 
-    controller = module.get<PokemonController>(PokemonController);
+    controller = module.get<PokemonController>(PokemonController)
+    service = module.get<PokemonService>(PokemonService)
 
-    jest.clearAllMocks();
+    jest.clearAllMocks()
   });
 
   it('should be defined', () => {
-    expect(controller).toBeDefined();
+    expect(controller).toBeDefined()
   });
 
-  it('should get the pokemon list', async () => {
-    await controller.getPokemonList();
-    expect(mockPokemonService.getPokemonListWithDetails).toHaveBeenCalled();
+  describe('getPokemonList', () => {
+    it('should return a list of pokemon without search query', async () => {
+      (service.getPokemonListWithDetails as jest.Mock).mockResolvedValue(mockPokemonList)
+      const result = await controller.getPokemonList()
+      expect(result).toEqual(mockPokemonList)
+      expect(service.getPokemonListWithDetails).toHaveBeenCalledWith(undefined)
+    })
+
+    it('should pass search query to service when provided', async () => {
+      const searchTerm = 'pika';
+      const filteredList = [mockPokemonList[0]];
+      (service.getPokemonListWithDetails as jest.Mock).mockResolvedValue(filteredList);
+      const result = await controller.getPokemonList(searchTerm)
+      expect(result).toEqual(filteredList);
+      expect(service.getPokemonListWithDetails).toHaveBeenCalledWith(searchTerm)
+    })
   });
 
-  it('should get pokemon details', async () => {
-    const name = 'pikachu';
-    await controller.getPokemonDetails(name);
-    expect(mockPokemonService.getPokemonFullDetails).toHaveBeenCalledWith(name);
+  describe('getPokemonDetails', () => {
+    it('should return full details for a specific pokemon', async () => {
+      const name = 'pikachu';
+      (service.getPokemonFullDetails as jest.Mock).mockResolvedValue(mockPokemonDetails);
+      const result = await controller.getPokemonDetails(name)
+      expect(result).toEqual(mockPokemonDetails)
+      expect(service.getPokemonFullDetails).toHaveBeenCalledWith(name)
+    })
   });
 
-  it('should get favorites', async () => {
-    await controller.getFavorites();
-    expect(mockPokemonService.getFavorites).toHaveBeenCalled();
+  describe('getFavorites', () => {
+    it('should return the list of favorites', async () => {
+      await controller.getFavorites()
+      expect(service.getFavorites).toHaveBeenCalled()
+    })
   });
 
-  it('should add a favorite', async () => {
-    const name = 'bulbasaur';
-    await controller.addFavorite(name);
-    expect(mockPokemonService.addFavorite).toHaveBeenCalledWith(name);
+  describe('addFavorite', () => {
+    it('should extract name from DTO and call service', async () => {
+      const dto: CreateFavoriteDto = { name: 'mewtwo' };
+      const updatedFavorites = ['pikachu', 'charizard', 'mewtwo'];
+        (service.addFavorite as jest.Mock).mockResolvedValue(updatedFavorites)
+      const result = await controller.addFavorite(dto)
+      expect(result).toEqual(updatedFavorites)
+      expect(service.addFavorite).toHaveBeenCalledWith(dto.name)
+    })
   });
 
-  it('should remove a favorite', async () => {
-    const name = 'pikachu';
-    await controller.removeFavorite(name);
-    expect(mockPokemonService.removeFavorite).toHaveBeenCalledWith(name);
+  describe('removeFavorite', () => {
+    it('should call service with the correct name', async () => {
+      const name = 'charizard';
+      const updatedFavorites = ['pikachu'];
+      (service.removeFavorite as jest.Mock).mockResolvedValue(updatedFavorites)
+      const result = await controller.removeFavorite(name)
+      expect(result).toEqual(updatedFavorites)
+      expect(service.removeFavorite).toHaveBeenCalledWith(name)
+    })
   });
 });

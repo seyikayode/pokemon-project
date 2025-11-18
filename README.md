@@ -1,124 +1,304 @@
-PokéManager - Backend API
+PokeManager Frontend
 
-This is the backend service for the PokéManager application. It is a NestJS API that acts as a proxy to the public PokéAPI. It adds a persistent database layer for managing user favorites and a high-speed caching layer using Redis for improved performance.
+A production-grade, responsive Single Page Application (SPA) for browsing and managing Pokémon. Built with React 18, TypeScript, and Vite, designed to demonstrate modern frontend architecture, optimistic UI patterns, and robust error handling.
 
-This server is responsible for all data fetching, business logic, and persistence.
+Table of Contents
 
-Features
+Features & Optimizations
 
-PokéAPI Proxy: Provides clean endpoints for the frontend, abstracting away the public PokéAPI.
-
-Favorite Management: Full CRUD (Create, Read, Delete) functionality for a user's favorite Pokémon.
-
-Database Persistence: Uses a SQLite database (via TypeORM) to permanently store the list of favorites.
-
-High-Speed Caching: Implements a Redis cache for two key areas:
-
-The main list of 150 Pokémon to make the homepage load instantly.
-
-Individual Pokémon details to make subsequent views instant.
-
-Scalable Architecture: Built with Docker and Docker Compose for a reproducible and scalable production environment.
-
-Unit Tested: Includes unit tests for the main service and controller to ensure logic is correct.
+Architecture & State Management
 
 Tech Stack
 
-Framework: NestJS
+Project Structure
 
-Language: TypeScript
+Getting Started
 
-Database: SQLite (managed with TypeORM)
+Testing Strategy
 
-Caching: Redis (managed with @nestjs/cache-manager)
+Deployment
 
-Containerization: Docker & Docker Compose
+Features & Optimizations
+#
+#
 
-Testing: Jest & @nestjs/testing
+1. Intelligent Data Fetching (TanStack Query)
 
-Architecture
+The application moves away from manual useEffect fetching to a robust server-state management library.
 
-This API is the single source of truth for the frontend.
+Automatic Caching: Data is cached in memory for 5 minutes (staleTime). Navigating between views or searching for a previously loaded term is instant (0ms latency).
 
-A request comes in from the React client (e.g., GET /api/pokemon).
+Background Refetching: Keeps data fresh without blocking the user interface.
 
-The PokemonController receives the request.
+Deduplication: Multiple components requesting the same data triggers only one network request.
 
-The PokemonController calls the PokemonService.
+2. Virtualized Infinite Scroll
 
-The PokemonService checks the Redis Cache first.
+Instead of traditional pagination, we use a high-performance infinite scroll.
 
-Cache Hit: If data is in the cache, it is returned instantly.
+Client-Side Windowing: The app fetches larger batches of data but only renders a subset to the DOM.
 
-Cache Miss: The service makes an HTTP call to the public PokéAPI.
+Intersection Observer: Uses a lightweight observer to detect when the user reaches the bottom of the viewport.
 
-The data is processed (e.g., parsing evolutions, simplifying the list).
+UX Smoothing: Includes an artificial delay (800ms) and a skeleton loader to provide visual feedback during rapid scrolling.
 
-The processed data is saved to the Redis Cache for future requests.
+3. Optimistic UI Updates
 
-The data is returned to the client.
+We prioritize perceived performance for user interactions.
 
-For favorites, the service bypasses the cache and communicates directly with the SQLite database using TypeORM.
+Instant Feedback: When a user clicks "Favorite", the UI updates immediately (changing the star icon) before the server responds.
 
-Local Setup and Testing
+Automatic Rollback: If the API call fails (e.g., network error), the UI automatically reverts to its previous state and displays an error toast.
+
+4. Robust Error Handling
+
+Graceful Degradation: Network failures trigger specific error UI components with "Retry" buttons, rather than crashing the app.
+
+Empty States: Dedicated views for zero search results or empty favorite lists to guide the user.
+
+5. Performance Tuning
+
+Debounced Search: Input is debounced by 500ms to prevent API flooding while typing.
+
+Skeleton Screens: Layout shift is minimized by reserving space for content before it loads.
+
+#
+#
+Architecture & State Management
+
+The application splits state into two distinct categories:
+
+Server State (React Query)
+
+Responsibility: Handling lists of Pokémon and individual details.
+
+Why: This data is owned by the server (PokéAPI/Backend). It is asynchronous and potentially stale.
+
+Implementation: useQuery hooks in PokemonList.tsx.
+
+Client State (React Context)
+
+Responsibility: Managing the user's list of Favorites.
+
+Why: This is user-specific preference data that needs to be accessible globally across the component tree (Cards, Modals, Lists) to ensure UI consistency.
+
+Implementation: FavoritesContext.tsx provides addFavorite, removeFavorite, and isFavorite methods.
+
+#
+#
+Tech Stack
+
+Category
+
+Technology
+
+Description
+
+Core
+
+React 18
+
+Functional components & Hooks
+
+Language
+
+TypeScript
+
+Strict type safety & Interfaces
+
+Build Tool
+
+Vite
+
+HMR & Optimized Production Builds
+
+Data Fetching
+
+TanStack Query v5
+
+Caching & Server State
+
+HTTP Client
+
+Axios
+
+Promise-based HTTP requests
+
+Routing
+
+React Router
+
+Client-side navigation
+
+Styling
+
+CSS Variables
+
+Native, responsive styling without heavy CSS-in-JS libs
+
+Testing
+
+Vitest
+
+Unit Testing
+
+#
+#
+Project Structure
+
+src/
+├── api.ts                  # Centralized Axios instance & types
+├── App.tsx                 # Root layout
+├── main.tsx                # Entry point & Context Providers
+├── components/
+│   ├── PokemonList.tsx     # Main container: Search, Filter, Scroll logic
+│   ├── PokemonCard.tsx     # Presentational component for grid items
+│   ├── PokemonDetailModal.tsx # Overlay with full details
+│   └── ...                 # CSS files per component
+├── context/
+    └── FavoritesContext.tsx # Global state for favorites & Optimistic UI
+
+#
+#
+Getting Started
 
 Prerequisites
 
-Node.js (v18 or later)
+Node.js v18+
 
-NPM
+Backend API running on port 3001 (See Backend README)
 
-Docker Desktop (must be running to use Redis)
+1. Configuration
 
-1. Run Redis in Docker
+Create a .env file in the root directory.
 
-Before starting the app, you must have a Redis instance running. The easiest way is with Docker:
-
-docker run -d -p 6379:6379 --name pokemanager-redis redis:6-alpine
-
-
-This will start a Redis container on port 6379.
-
-2. Install and Run the App
-
-Clone the repository:
-
-<!-- git clone https://github.com/seyikayode/pokemon-backend.git
-cd pokemon-backend -->
-git clone https://github.com/seyikayode/pokemon-project.git
-cd pokemon-project/pokemon-backend
+# Local Development
+VITE_API_URL=http://localhost:3001/api
+VITE_BATCH_SIZE=13
 
 
-Install dependencies:
+2. Installation
 
 npm install
 
 
-Create your environment file:
-Copy the example file.
+3. Development Server
 
-cp .env.example .env
-
-
-Now, open the .env file and make sure the variables are correct for your local setup (the defaults in .env.example should work).
-
-Run the application in development mode:
-
-npm run start:dev
+npm run dev
 
 
-The API will now be running on http://localhost:3001.
+The app will open at http://localhost:5173.
 
-How to Run Tests
+#
+#
+Testing Strategy
 
-Run the full Jest test suite to check all services and controllers.
+We use a "Testing Trophy" approach, balancing Unit and E2E tests.
 
-npm run test
+Unit Tests (Vitest)
+
+Focus on component logic and state interactions in isolation.
+
+Mocking: We mock API responses and Context to test filtering logic and rendering states without a backend.
+
+Run: npm run test
+
+#
+#
+#
+#
+#
+#
+#
+
+PokeManager Backend API
+
+The high-performance backend service for the PokéManager application. Built with NestJS, it provides a robust, cached, and rate-limited API for managing Pokémon data and user favorites.
+
+#
+#
+Features
+
+Read-Through Caching Strategy: Implements Redis to cache API responses from the external PokéAPI.
+
+List Cache: Caches the main 150 Pokémon list for 1 hour.
+
+Detail Cache: Caches individual Pokémon details for 1 hour.
+
+Impact: Reduces response time from ~600ms (external API) to ~15ms (Redis hit).
+
+Optimized Persistence: Uses SQLite with TypeORM for managing user favorites.
+
+Includes database indexing on the name column for O(1) lookup speeds.
+
+Security & Stability:
+
+Rate Limiting: Limits users to 100 requests/minute via @nestjs/throttler.
+
+Validation: Uses class-validator DTOs to sanitize all incoming payloads.
+
+Error Handling: Catches external 404/500 errors and maps them to user-friendly NestJS exceptions.
+
+Server-Side Search: Implements efficient filtering logic on the server to reduce payload size.
+
+#
+#
+Tech Stack
+
+Framework: NestJS (TypeScript)
+
+Database: SQLite (TypeORM)
+
+Caching: Redis (via Docker)
+
+Testing: Jest (Unit & Integration), Supertest
+
+Containerization: Docker & Docker Compose
+
+#
+#
+Architecture
+
+The backend follows a layered architecture:
+
+Controller (PokemonController): Handles HTTP requests, validates DTOs, and manages Rate Limiting guards.
+
+Service (PokemonService): Contains the business logic.
+
+Checks Redis Cache first.
+
+If cache miss, fetches from external API using HttpService.
+
+Parses complex Evolution Chains into flat arrays.
+
+Interacts with SQLite for Favorites.
+
+Data Layer:
+
+TypeORM: Manages the Favorite entity.
+
+Redis: Stores temporary API responses.
+
+#
+#
+Getting Started
+
+Prerequisites
+
+Node.js v18+
+
+Docker Desktop (required for Redis)
+
+1. Start Redis
+
+Use the included Docker Compose file to spin up Redis (and the app in production). For local dev, you can just run Redis:
+
+docker run -d -p 6379:6379 --name pokemanager-redis redis:6-alpine
 
 
-Environment Variables
+2. Environment Variables
 
-These variables are required. Copy them from .env.example to a new .env file.
+Create a .env file in the root directory:
 
 # Application
 PORT=3001
@@ -138,135 +318,18 @@ POKEMON_IMAGE_URL=https://raw.githubusercontent.com/PokeAPI/sprites/master/sprit
 POKEMON_OFFICIAL_IMAGE_URL=https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork
 
 
-
-API Endpoints
-
-GET /api/pokemon: Get the list of 150 Pokémon with basic details.
-
-GET /api/pokemon/:name: Get full details for a single Pokémon (abilities, types, evolution).
-
-GET /api/favorites: Get the list of all favorite Pokémon names.
-
-POST /api/favorites: Add a Pokémon to favorites. (Body: { "name": "pikachu" })
-
-DELETE /api/favorites/:name: Remove a Pokémon from favorites.
-
-
-
-
-#
-#
-#
-#
-#
-#
-#
-
-PokéManager - Frontend
-
-This is the frontend client for the PokéManager application. It is a responsive single-page application built with React and Vite that allows users to browse and manage their favorite Pokémon.
-
-This application is purely a client. It is 100% stateless and relies on the backend API for all data fetching and persistence.
-
-Features
-
-Virtual Infinite Scrolling: Fetches all 150 Pokémon at once (from the fast backend cache) but renders only the visible ones, allowing for smooth scrolling without pagination.
-
-Detailed Modals: Users can click any Pokémon to view a modal with its types, abilities, and full evolution chain.
-
-Client-Side Search: A live search bar filters the Pokémon list instantly.
-
-Favorite Filtering: A checkbox allows users to see only their favorited Pokémon.
-
-Persistent Favorites: Users can add or remove Pokémon from their favorites. This state is managed through React Context and synced with the backend API, so it persists between sessions.
-
-Responsive Design: The application is usable on all devices, from mobile phones to desktops.
-
-Unit Tested: Includes unit tests for the main PokemonList component to verify filtering and API mocking.
-
-Tech Stack
-
-Framework: React 18
-
-Bundler: Vite
-
-Language: TypeScript
-
-Styling: CSS Modules (plain CSS)
-
-State Management: React Context
-
-API Client: Axios
-
-Infinite Scroll: react-intersection-observer
-
-Testing: Vitest & React Testing Library
-
-Architecture
-
-This application is built around a central PokemonList component which handles all major logic:
-
-Data Fetching: On load, it calls the getPokemonList function from src/api.ts to fetch the main list.
-
-Filtering: useMemo hooks are used to create the list of Pokémon to display. This list is derived from the main list and filtered by the searchTerm and showOnlyFavorites states.
-
-State Management: The global list of favorites is managed in FavoritesContext. When a user clicks a "favorite" button, the context calls the backend API and updates its own state, causing the app to re-render.
-
-Virtual Scrolling: The useInView hook tracks a "loader" element at the bottom of the list. When it becomes visible, the component increases the visibleCount state, which slices a larger portion of the main list to be rendered.
-
-API Abstraction: All axios calls are kept in a single src/api.ts file. This file reads its base URL from the environment variables, making it easy to switch between local and production backends.
-
-Local Setup and Testing
-
-Prerequisites
-
-Node.js (v18 or later)
-
-NPM
-
-The backend API must be running locally (on http://localhost:3001) before starting the frontend.
-
-1. Install and Run the App
-
-Clone the repository:
-
-<!-- git clone https://github.com/seyikayode/pokemon-frontend.git
-cd pokemon-frontend -->
-git clone https://github.com/seyikayode/pokemon-project.git
-cd pokemon-project/pokemon-frontend
-
-
-Install dependencies:
+3. Run the Application
 
 npm install
+npm run start:dev
 
 
-Create your environment file:
-Copy the example file.
+The server will start on http://localhost:3001.
 
-cp .env.example .env
+🧪 Testing
 
+The project includes comprehensive testing strategies:
 
-The default VITE_API_URL points to http://localhost:3001/api, which is correct for local development.
-
-Run the application in development mode:
-
-npm run dev
-
-
-The application will now be running on http://localhost:5137.
-
-How to Run Tests
-
-Run the full Vitest test suite to check all components.
+Unit Tests: Verify individual services and controllers.
 
 npm run test
-
-
-Environment Variables
-
-These variables are required. Copy them from .env.example to a new .env file.
-
-# The full URL to the backend API
-VITE_API_URL=http://localhost:3001/api
-VITE_BATCH_SIZE=10

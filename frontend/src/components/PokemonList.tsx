@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { type SimplePokemon, getPokemonList } from '../api';
+import { useQuery } from '@tanstack/react-query';
+import { getPokemonList } from '../api';
 import { useFavorites } from '../context/FavoritesContext';
 import PokemonCard from './PokemonCard';
 import PokemonDetailModal from './PokemonDetailModal';
@@ -10,66 +11,90 @@ const batchSize = import.meta.env.VITE_BATCH_SIZE;
 const formatBatchSize = parseInt(batchSize);
 
 const PokemonList: React.FC = () => {
-    const [allPokemon, setAllPokemon] = useState<SimplePokemon[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
-
+    // --- UI State ---
     const [showOnlyFavorites, setShowOnlyFavorites] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
-
+    const [debouncedSearch, setDebouncedSearch] = useState("");
     const [selectedPokemon, setSelectedPokemon] = useState<string | null>(null);
 
-    // state for infinite scrolling 
+    // --- Infinite Scroll State ---
     const [visibleCount, setVisibleCount] = useState(formatBatchSize);
-    const { ref, inView } = useInView({
-        threshold: 0
-    });
+    const [isLoadingMore, setIsLoadingMore] = useState(false);
 
+    const { ref, inView } = useInView({ threshold: 0, rootMargin: '100px' });
     const { favorites } = useFavorites();
 
+    // Debounce Search Input
     useEffect(() => {
-        const loadPokemon = async () => {
-            try {
-                setLoading(true);
-                const data = await getPokemonList();
-                setAllPokemon(data);
-            } catch (err) {
-                setError('Failed to fetch Pokemon');
-            } finally {
-                setLoading(false);
-            }
-        };
-        loadPokemon();
-    }, []);
+        const timer = setTimeout(() => {
+            setDebouncedSearch(searchTerm)
+            setVisibleCount(formatBatchSize);// Reset scroll position on new search
+        }, 500)
+        return () => clearTimeout(timer)
+    }, [searchTerm])
 
+    // REACT QUERY: Handles fetching, caching, and loading states
+    const {
+        data: allPokemon = [], // Default to empty array
+        isLoading,
+        isError,
+        error,
+        refetch
+    } = useQuery({
+        queryKey: ['pokemonList', debouncedSearch],
+        queryFn: () => getPokemonList(debouncedSearch),
+
+        // Keep previous data while fetching new search results to prevent flickering
+        placeholderData: (previousData) => previousData
+    });
+
+    // Infinite Scroll Logic
     useEffect(() => {
-        if (inView && !loading && !searchTerm && !showOnlyFavorites) {
-            setVisibleCount((prevCount) => prevCount + formatBatchSize);
+        if (inView && !isLoading && !showOnlyFavorites && !isLoadingMore) {
+            setIsLoadingMore(true)
         }
-    }, [inView, loading, searchTerm, showOnlyFavorites]);
+    }, [inView, isLoading, showOnlyFavorites, isLoadingMore])
 
+    // Handle the artificial delay for smooth scrolling
+    useEffect(() => {
+        let timeoutId: ReturnType<typeof setTimeout>;
+        if (isLoadingMore) {
+            timeoutId = setTimeout(() => {
+                setVisibleCount((prev) => prev + formatBatchSize);
+                setIsLoadingMore(false)
+            }, 1500)
+        }
+        return () => clearTimeout(timeoutId)
+    }, [isLoadingMore])
+
+    // Filter Logic (Favorites are filtered client-side)
     const filteredPokemon = useMemo(() => {
-        let list = allPokemon;
-
         if (showOnlyFavorites) {
-            list = list.filter(pokemon => favorites.has(pokemon.name));
-        };
+            return allPokemon.filter(p => favorites.has(p.name));
+        }
+        return allPokemon;
+    }, [allPokemon, favorites, showOnlyFavorites]);
 
-        if (searchTerm) {
-            list = list.filter(pokemon =>
-                pokemon.name.toLowerCase().includes(searchTerm.toLowerCase())
-            );
-        };
+    // Slice the list based on infinite scroll depth
+    const listToDisplay = showOnlyFavorites
+        ? filteredPokemon
+        : filteredPokemon.slice(0, visibleCount);
 
-        return list;
-    }, [allPokemon, favorites, showOnlyFavorites, searchTerm]);
+    const hasMore = !showOnlyFavorites && visibleCount < filteredPokemon.length;
 
-    const isFiltering = searchTerm || showOnlyFavorites;
-    const listToDisplay = isFiltering ? filteredPokemon : filteredPokemon.slice(0, visibleCount);
-    const hasMore = !isFiltering && visibleCount < filteredPokemon.length;
-
-    if (loading && allPokemon.length === 0) return <div>Loading Pokemon...</div>;
-    if (error) return <div>Error: {error}</div>;
+    // Error UI
+    if (isError) {
+        return (
+            <div className="error-container">
+                <p className="error-msg">
+                    {error instanceof Error ? error.message : 'Failed to load Pokemon.'}
+                </p>
+                <button className="retry-btn" onClick={() => refetch()}>
+                    Try Again
+                </button>
+            </div>
+        )
+    }
 
     return (
         <div className="pokemon-list-container">
@@ -85,24 +110,61 @@ const PokemonList: React.FC = () => {
                         type="checkbox"
                         checked={showOnlyFavorites}
                         onChange={(e) => setShowOnlyFavorites(e.target.checked)}
+                        disabled={isLoading}
                     />
                     Show Favorites Only
                 </label>
             </div>
 
-            <div className="pokemon-grid">
-                {listToDisplay.map((pokemon) => (
-                    <PokemonCard
-                        key={pokemon.name}
-                        pokemon={pokemon}
-                        onCardClick={() => setSelectedPokemon(pokemon.name)}
-                    />
-                ))}
-            </div>
+            {/* Loading State: Show Skeletons */}
+            {isLoading && allPokemon.length === 0 ? (
+                <div className="pokemon-grid">
+                    {Array.from({ length: 12 }).map((_, index) => (
+                        <div key={index} className="pokemon-card skeleton-card">
+                            <div className="skeleton-image"></div>
+                            <div className="skeleton-line title"></div>
+                            <div className="skeleton-line subtitle"></div>
+                        </div>
+                    ))}
+                </div>
+            ) : listToDisplay.length > 0 ? (
+                // Success State: Show Cards
+                <div className="pokemon-grid">
+                    {listToDisplay.map((pokemon) => (
+                        <PokemonCard
+                            key={pokemon.name}
+                            pokemon={pokemon}
+                            onCardClick={() => setSelectedPokemon(pokemon.name)}
+                        />
+                    ))}
+                </div>
+            ) : (
+                // Empty State: No Results
+                <div className="empty-state">
+                    <div className="empty-icon">🔍</div>
+                    <h3>No Pokemon Found</h3>
+                    <p>
+                        {showOnlyFavorites
+                            ? "You haven't added any favorites yet"
+                            : `No results matching "${searchTerm}"`}
+                    </p>
+                    {showOnlyFavorites && (
+                        <button className="reset-btn" onClick={() => setShowOnlyFavorites(false)}>
+                            View All Pokemon
+                        </button>
+                    )}
+                </div>
+            )}
 
-            {hasMore && (
-                <div className="loader" ref={ref}>
-                    Loading more Pokemon...
+            {/* Infinite Scroll Loader at Bottom */}
+            {!isLoading && hasMore && listToDisplay.length > 0 && (
+                <div className="loader-container" ref={ref}>
+                    {isLoadingMore && (
+                        <>
+                            <div className="spinner"></div>
+                            <span>Loading more Pokemon...</span>
+                        </>
+                    )}
                 </div>
             )}
 
@@ -113,7 +175,7 @@ const PokemonList: React.FC = () => {
                 />
             )}
         </div>
-    );
+    )
 };
 
 export default PokemonList;

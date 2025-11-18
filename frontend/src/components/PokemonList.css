@@ -45,10 +45,118 @@
     gap: 1.5rem;
 }
 
-.loader {
+.skeleton-card {
+    cursor: default;
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 200px;
+    background-color: var(--bg-white);
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+    padding: 1.5rem 1rem;
+}
+
+.skeleton-image,
+.skeleton-line {
+    background: #f0f0f0;
+    background-image: linear-gradient(to right,
+            #f0f0f0 0%,
+            #e0e0e0 20%,
+            #f0f0f0 40%,
+            #f0f0f0 100%);
+    background-repeat: no-repeat;
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite linear;
+}
+
+.skeleton-image {
+    width: 96px;
+    height: 96px;
+    border-radius: 50%;
+    margin-bottom: 1rem;
+}
+
+.skeleton-line {
+    height: 16px;
+    border-radius: 4px;
+    margin-bottom: 0.5rem;
+}
+
+.skeleton-line.title {
+    width: 70%;
+    height: 20px;
+}
+
+.skeleton-line.subtitle {
+    width: 40%;
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: -200% 0;
+    }
+
+    100% {
+        background-position: 200% 0;
+    }
+}
+
+.loader-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
     padding: 2rem;
-    text-align: center;
-    font-size: 1.2rem;
-    font-weight: 500;
+    gap: 1rem;
     color: var(--text-light);
+    font-weight: 500;
+    min-height: 120px;
+}
+
+.spinner {
+    width: 32px;
+    height: 32px;
+    border: 4px solid #e0e0e0;
+    border-top: 4px solid var(--primary-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.error-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin-top: 4rem;
+    gap: 1.5rem;
+}
+
+.error-msg {
+    text-align: center;
+    font-size: 1.25rem;
+    color: var(--text-dark);
+    font-weight: 500;
+}
+
+.retry-btn {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.retry-btn:hover {
+    background-color: #2a3a9c;
 }

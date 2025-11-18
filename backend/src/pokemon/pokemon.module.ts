@@ -3,7 +3,7 @@ import { HttpModule } from '@nestjs/axios';
 import { PokemonController } from './pokemon.controller';
 import { PokemonService } from './pokemon.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { Favorite } from './favorite.entity';
+import { Favorite } from './entity/favorite.entity';
 
 @Module({
   imports: [
@@ -13,4 +13,4 @@ import { Favorite } from './favorite.entity';
   controllers: [PokemonController],
   providers: [PokemonService]
 })
-export class PokemonModule {}
+export class PokemonModule { }
